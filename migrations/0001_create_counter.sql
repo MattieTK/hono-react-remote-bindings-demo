@@ -1,0 +1,8 @@
+-- Create counter table
+CREATE TABLE IF NOT EXISTS counter (
+    id INTEGER PRIMARY KEY,
+    value INTEGER NOT NULL DEFAULT 0
+);
+
+-- Insert initial counter row
+INSERT OR IGNORE INTO counter (id, value) VALUES (1, 0);

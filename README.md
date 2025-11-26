@@ -1,90 +1,141 @@
-# React + Vite + Hono + Cloudflare Workers
+# D1 Remote Binding Test
 
-[![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/cloudflare/templates/tree/main/vite-react-template)
+A minimal app to test **Cloudflare D1 remote bindings** during local development using the Cloudflare Vite plugin and Hono.
 
-This template provides a minimal setup for building a React application with TypeScript and Vite, designed to run on Cloudflare Workers. It features hot module replacement, ESLint integration, and the flexibility of Workers deployments.
+## What This Tests
 
-![React + TypeScript + Vite + Cloudflare Workers](https://imagedelivery.net/wSMYJvS3Xw-n339CbDyDIA/fc7b4b62-442b-4769-641b-ad4422d74300/public)
+This app demonstrates connecting to a **remote D1 database** from local development. Instead of using a local SQLite file, the app connects directly to your production D1 database on Cloudflare's network while running `npm run dev`.
 
-<!-- dash-content-start -->
+### The Stack
 
-🚀 Supercharge your web development with this powerful stack:
+- **React** - Frontend UI
+- **Vite** + **@cloudflare/vite-plugin** - Dev server with Workers runtime emulation
+- **Hono** - Lightweight API framework running on Workers
+- **Cloudflare D1** - Serverless SQL database with remote binding
 
-- [**React**](https://react.dev/) - A modern UI library for building interactive interfaces
-- [**Vite**](https://vite.dev/) - Lightning-fast build tooling and development server
-- [**Hono**](https://hono.dev/) - Ultralight, modern backend framework
-- [**Cloudflare Workers**](https://developers.cloudflare.com/workers/) - Edge computing platform for global deployment
+## How It Works
 
-### ✨ Key Features
+### Remote Binding Configuration
 
-- 🔥 Hot Module Replacement (HMR) for rapid development
-- 📦 TypeScript support out of the box
-- 🛠️ ESLint configuration included
-- ⚡ Zero-config deployment to Cloudflare's global network
-- 🎯 API routes with Hono's elegant routing
-- 🔄 Full-stack development setup
-- 🔎 Built-in Observability to monitor your Worker
+The key configuration is in `wrangler.jsonc`:
 
-Get started in minutes with local development or deploy directly via the Cloudflare dashboard. Perfect for building modern, performant web applications at the edge.
-
-<!-- dash-content-end -->
-
-## Getting Started
-
-To start a new project with this template, run:
-
-```bash
-npm create cloudflare@latest -- --template=cloudflare/templates/vite-react-template
+```jsonc
+"d1_databases": [
+  {
+    "binding": "DATABASE",
+    "database_name": "my-hono-db-test",
+    "database_id": "9a34f1ed-3add-489f-86c5-7b3b225242c9",
+    "remote": true  // <-- This enables remote binding
+  }
+]
 ```
 
-A live deployment of this template is available at:
-[https://react-vite-template.templates.workers.dev](https://react-vite-template.templates.workers.dev)
+Setting `"remote": true` tells the Cloudflare Vite plugin to connect to the actual D1 database instead of creating a local SQLite file.
 
-## Development
+### Vite Plugin Integration
 
-Install dependencies:
+The `@cloudflare/vite-plugin` in `vite.config.ts` reads the wrangler config and provides the D1 binding to your Worker during development:
+
+```ts
+import { cloudflare } from "@cloudflare/vite-plugin";
+
+export default defineConfig({
+  plugins: [react(), cloudflare()],
+});
+```
+
+### Database Schema
+
+The counter table is defined in `migrations/0001_create_counter.sql`:
+
+```sql
+CREATE TABLE IF NOT EXISTS counter (
+    id INTEGER PRIMARY KEY,
+    value INTEGER NOT NULL DEFAULT 0
+);
+
+INSERT OR IGNORE INTO counter (id, value) VALUES (1, 0);
+```
+
+### API Endpoints
+
+The Hono worker (`src/worker/index.ts`) exposes three endpoints:
+
+| Method | Endpoint                 | Description                    |
+| ------ | ------------------------ | ------------------------------ |
+| GET    | `/api/counter`           | Fetch current counter value    |
+| POST   | `/api/counter/increment` | Increment and return new value |
+| POST   | `/api/counter/decrement` | Decrement and return new value |
+
+Each endpoint queries the D1 database directly, so changes persist across page reloads and are shared across all clients.
+
+## Local Setup
+
+### Prerequisites
+
+- Node.js 18+
+- A Cloudflare account
+- Wrangler CLI authenticated (`npx wrangler login`)
+
+### 1. Install Dependencies
 
 ```bash
 npm install
 ```
 
-Start the development server with:
+### 2. Create a D1 Database
+
+```bash
+npx wrangler d1 create my-hono-db-test
+```
+
+Copy the returned `database_id` and update `wrangler.jsonc`.
+
+### 3. Apply the Migration
+
+Apply to the remote database:
+
+```bash
+npx wrangler d1 execute my-hono-db-test --remote --file=migrations/0001_create_counter.sql
+```
+
+### 4. Start Development Server
 
 ```bash
 npm run dev
 ```
 
-Your application will be available at [http://localhost:5173](http://localhost:5173).
+Open [http://localhost:5173](http://localhost:5173). The counter will load from and save to your remote D1 database.
 
-## Production
-
-Build your project for production:
-
-```bash
-npm run build
-```
-
-Preview your build locally:
-
-```bash
-npm run preview
-```
-
-Deploy your project to Cloudflare Workers:
+## Deployment
 
 ```bash
 npm run build && npm run deploy
 ```
 
-Monitor your workers:
+## Switching Between Local and Remote
 
-```bash
-npx wrangler tail
+To use a **local** SQLite database instead (for offline development), remove or set `"remote": false` in `wrangler.jsonc`:
+
+```jsonc
+"d1_databases": [
+  {
+    "binding": "DATABASE",
+    "database_name": "my-hono-db-test",
+    "database_id": "9a34f1ed-3add-489f-86c5-7b3b225242c9"
+    // No "remote" key = local SQLite
+  }
+]
 ```
 
-## Additional Resources
+Then apply the migration locally:
 
-- [Cloudflare Workers Documentation](https://developers.cloudflare.com/workers/)
-- [Vite Documentation](https://vitejs.dev/guide/)
-- [React Documentation](https://reactjs.org/)
+```bash
+npx wrangler d1 execute my-hono-db-test --local --file=migrations/0001_create_counter.sql
+```
+
+## Resources
+
+- [D1 Remote Bindings Docs](https://developers.cloudflare.com/d1/build-with-d1/local-development/#develop-locally-with-remote-resources)
+- [Cloudflare Vite Plugin](https://developers.cloudflare.com/workers/frameworks/framework-guides/vite/)
 - [Hono Documentation](https://hono.dev/)

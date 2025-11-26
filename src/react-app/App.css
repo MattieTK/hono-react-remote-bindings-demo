@@ -1,45 +1,123 @@
-#root {
-	max-width: 1280px;
-	margin: 0 auto;
+.app {
+	min-height: 100vh;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
 	padding: 2rem;
+	gap: 2rem;
+}
+
+header {
 	text-align: center;
 }
 
 .logo {
-	height: 6em;
-	padding: 1.5em;
-	will-change: filter;
-	transition: filter 300ms;
-}
-.logo:hover {
-	filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.react:hover {
-	filter: drop-shadow(0 0 2em #61dafbaa);
-}
-.logo.cloudflare:hover {
-	filter: drop-shadow(0 0 2em #f6821faa);
+	height: 5rem;
+	margin-bottom: 1rem;
+	filter: drop-shadow(0 0 1.5rem #f6821f66);
 }
 
-@keyframes logo-spin {
-	from {
-		transform: rotate(0deg);
-	}
-	to {
-		transform: rotate(360deg);
-	}
+h1 {
+	font-size: 2rem;
+	margin: 0 0 0.5rem;
+	background: linear-gradient(135deg, #f6821f, #faad3f);
+	-webkit-background-clip: text;
+	-webkit-text-fill-color: transparent;
+	background-clip: text;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-	a:nth-of-type(2) .logo {
-		animation: logo-spin infinite 20s linear;
-	}
-}
-
-.card {
-	padding: 2em;
-}
-
-.read-the-docs {
+.subtitle {
 	color: #888;
+	margin: 0;
+	font-size: 0.95rem;
+}
+
+.counter-card {
+	background: linear-gradient(145deg, #1e1e1e, #2a2a2a);
+	border: 1px solid #333;
+	border-radius: 1rem;
+	padding: 2rem 3rem;
+	text-align: center;
+	box-shadow: 0 4px 24px rgba(0, 0, 0, 0.3);
+}
+
+.counter-card h2 {
+	margin: 0 0 1.5rem;
+	font-size: 1.1rem;
+	text-transform: uppercase;
+	letter-spacing: 0.1em;
+	color: #666;
+}
+
+.counter-container {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 1.5rem;
+}
+
+.counter-btn {
+	font-size: 1.5rem;
+	width: 3.5rem;
+	height: 3.5rem;
+	border-radius: 50%;
+	border: 2px solid #444;
+	background: #1a1a1a;
+	color: white;
+	cursor: pointer;
+	transition: all 0.2s ease;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.counter-btn:hover:not(:disabled) {
+	transform: scale(1.1);
+}
+
+.counter-btn.increment:hover:not(:disabled) {
+	border-color: #4ade80;
+	background: #166534;
+	box-shadow: 0 0 12px #4ade8044;
+}
+
+.counter-btn.decrement:hover:not(:disabled) {
+	border-color: #f87171;
+	background: #991b1b;
+	box-shadow: 0 0 12px #f8717144;
+}
+
+.counter-btn:disabled {
+	opacity: 0.4;
+	cursor: not-allowed;
+}
+
+.counter-value {
+	font-size: 3.5rem;
+	font-weight: 700;
+	min-width: 5rem;
+	text-align: center;
+	font-variant-numeric: tabular-nums;
+}
+
+.status {
+	margin: 1.5rem 0 0;
+	font-size: 0.85rem;
+	color: #4ade80;
+}
+
+.error {
+	margin: 1.5rem 0 0;
+	font-size: 0.85rem;
+	color: #f87171;
+}
+
+footer {
+	color: #555;
+	font-size: 0.85rem;
+}
+
+footer p {
+	margin: 0;
 }
